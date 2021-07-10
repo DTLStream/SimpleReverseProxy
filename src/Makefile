@@ -1,10 +1,13 @@
 CXX=g++
 RM=rm
-CPPFLAGS=-std=c++11 -pedantic -Wall -Wextra -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Werror -Wno-unused -I/usr/local/include
-Server:
-	$(CXX) $(CPPFLAGS) -oServer Server.cpp ProxyProto.cpp Log.cpp Session.cpp
-Client:
-	$(CXX) $(CPPFLAGS) -oClient Client.cpp ProxyProto.cpp Log.cpp Session.cpp
+CPPFLAGS=-std=c++11 -pedantic -Wall -Wextra -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Wno-unused -I/usr/local/include #  -Werror
+CommonDeps=ProxyProto.cpp Log.cpp Session.cpp Host.cpp
+ServerDeps=Server.cpp
+ClientDeps=Client.cpp
+Server: $(CommonDeps) $(ServerDeps)
+	$(CXX) $(CPPFLAGS) -oServer $(CommonDeps) $(ServerDeps)
+Client: $(CommonDeps) $(ClientDeps)
+	$(CXX) $(CPPFLAGS) -oClient $(CommonDeps) $(ClientDeps)
 clean:
 	$(RM) Server Client
 

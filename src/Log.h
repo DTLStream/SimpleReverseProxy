@@ -1,3 +1,6 @@
+#ifndef LOG_H
+#define LOG_H
+
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -48,3 +51,5 @@ namespace Log {
         Lobj.out << std::put_time(std::localtime(&ctimenow),timeformat) << outstring << "\n";
     }
 };
+
+#endif

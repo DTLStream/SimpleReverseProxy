@@ -31,5 +31,10 @@
 *.out
 *.app
 
-# Markdown
+# Self Defined
 *.md
+*.aborted
+*.vscode
+*.out.*
+src/Client
+src/Server

@@ -45,4 +45,11 @@ class Session:
     std::string sock_readbuffer;
 };
 
+
+// Useful Utilities
+void ignore_sigpipe();
+extern size_t tcp_keepalive_time;
+extern size_t tcp_keepalive_interval;
+void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock);
+
 #endif

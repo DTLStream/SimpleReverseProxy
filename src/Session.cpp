@@ -18,21 +18,23 @@ Session::Session(
     mainsock_pending_bytes(0),sock_pending_bytes(0),
     mainsock_readbuffer(default_bufsize,0),sock_readbuffer(default_bufsize,0) {
     Log::setTitle("Session");
-    Log::Log<Log::info>("ignore sigpipe and setsockopt keepalive");
-    // first to ignore sigpipe
-    signal(SIGPIPE,SIG_IGN);
-    // second to set keepalive
-    bool keepalive = true;
-    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
-    setsockopt(sock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
-    // third to set rcv/sndtimeo
-    timeval period;
-    period.tv_sec = 5; // 5s per keepalive pkt
-    period.tv_usec = 0;
-    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
-    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
-    setsockopt(sock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
-    setsockopt(sock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
+
+    // Log::Log<Log::info>("ignore sigpipe and setsockopt keepalive");
+    // // first to ignore sigpipe
+    // signal(SIGPIPE,SIG_IGN);
+    // // second to set keepalive
+    // bool keepalive = true;
+    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+    // // third to set rcv/sndtimeo
+    // timeval period;
+    // period.tv_sec = 5; // 5s per keepalive pkt
+    // period.tv_usec = 0;
+    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
+    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
+    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
+    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
+
 };
 
 Session::~Session() {
@@ -144,3 +146,40 @@ void Session::on_read_sock(const std::string &towrite) {
         }
     );
 }
+
+// ignore sigpipe utility
+void ignore_sigpipe() {
+    Log::Log<Log::info>("ignore sigpipe");
+    signal(SIGPIPE,SIG_IGN);
+}
+
+// TCP KEEP ALIVE UTILITIES
+size_t tcp_keepalive_time = 3; // 3s
+size_t tcp_keepalive_interval = 2; // 2s
+void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
+    if (!sock||!sock->is_open()) return;
+    Log::Log<Log::info>("TCP keep alive");
+
+    bool keepalive = 1;
+    setsockopt(sock->native_handle(),
+        SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+#ifdef __APPLE__
+#define TCP_KEEPIDLE TCP_KEEPALIVE
+    setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPIDLE,
+        &tcp_keepalive_time,sizeof(tcp_keepalive_time));
+#undef TCP_KEEPIDLE
+#endif
+    setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPINTVL,
+        &tcp_keepalive_interval, sizeof(tcp_keepalive_interval));
+}
+
+
+
+// Log::Log<Log::info>("setsockopt keepalive");
+// // first to set keepalive
+// bool keepalive = 1;
+// setsockopt(mainsock->native_handle(),
+//     SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+// // second to set IPPROTO_TCP values
+// setsockopt(mainsock->native_handle(),
+//     IPPROTO_TCP,TCP_KEEP)

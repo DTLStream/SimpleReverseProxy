@@ -74,6 +74,7 @@ void Client::begin_connecting_server() {
     Log::setTitle("Client::begin_connecting_server");
     Log::Log<Log::info>("begin connecting server");
     mainsock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
+    keep_alive(mainsock);
     mainsock->async_connect(
         server_ep,
         [&](const system::error_code &ec) {
@@ -143,6 +144,7 @@ void Client::process_server_req() {
 void Client::begin_connecting_target() {
     Log::setTitle("Client::begin_connecting_target");
     sock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
+    keep_alive(sock);
     sock->async_connect(
         target_ep,
         [&](const system::error_code &ec) {
@@ -167,7 +169,6 @@ void Client::begin_connecting_target() {
 }
 
 
-
 int main(int argc, char *argv[]){
     Log::setLogLevel(Log::debug);
     Log::setTitle("main");
@@ -185,6 +186,7 @@ int main(int argc, char *argv[]){
         tip = std::string("::ffff:").append(tip);
     }
     uint16_t tport_n = std::atoi(tport.c_str());
+    ignore_sigpipe();
     Client c(sip,sport_n,tip,tport_n);
     c.run();
     return 0;

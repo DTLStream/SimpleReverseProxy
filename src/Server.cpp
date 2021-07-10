@@ -125,6 +125,7 @@ void Server::begin_accepting_client() {
                 // mainsock.reset();
                 begin_accepting_client();
             } else {
+                keep_alive(mainsock);
                 process_client_req();
             }
         }
@@ -179,6 +180,7 @@ void Server::begin_accepting_user() {
                 Log::Log<Log::info>("wait 0s and retry begin_accepting_user");
                 begin_accepting_user();
             } else {
+                keep_alive(sock);
                 process_server_req();
             }
         }
@@ -235,6 +237,7 @@ int main(int argc, char *argv[]){
         tip = std::string("::ffff:").append(tip);
     }
     uint16_t tport_n = std::atoi(tport.c_str());
+    ignore_sigpipe();
     Server s(sip,sport_n,tip,tport_n);
     s.run();
     return 0;

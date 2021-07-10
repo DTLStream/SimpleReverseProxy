@@ -1,0 +1,121 @@
+#ifndef SESSION_H
+#define SESSION_H
+
+#include <memory>
+#include <boost/asio.hpp>
+#include "ProxyProto.h"
+
+// this is only a base class, do not use it to construct session
+// real session implementations are: ServerSession, ClientSession, ControlSession
+class Session:
+    private std::enable_shared_from_this<Session> {
+    public:
+    enum State {
+        created = 0, // on create, header not parsed yet
+        connected = 1, // successfully parsed header, reach the normal state
+        destroyed = 2 // on error, call the destroy function
+    };
+
+    virtual void run() = 0;
+
+    protected:
+    Session(std::shared_ptr<boost::asio::ip::tcp::socket> s);
+    virtual ~Session() = default;
+
+    // state to record session state
+    State sessionstate;
+
+    // Request should be held by Server/Client, following is wrong
+    // every Session should have a Request object in order to parse header
+    Protocol::Request req;
+    
+    // for Server, the endpoint of the mainsock is Client, and vice versa
+    // ServerSession/ClientSession have another socket for incoming connection
+    // ControlSession only need this socket
+    std::shared_ptr<boost::asio::ip::tcp::socket> mainsock;
+
+    // every Session should have a destroy method to close socket
+    void destroy();
+
+    // // ioctx should be held by Server/Client
+    // Session(boost::asio::io_context &x);
+    // boost::asio::io_context &ioctx;
+
+    private:
+};
+
+
+class ControlSession:
+    public Session, private std::enable_shared_from_this<ControlSession> {
+    public:
+    ControlSession(std::shared_ptr<boost::asio::ip::tcp::socket> s);
+    ~ControlSession() = default;
+    void run();
+    protected:
+    private:
+};
+
+
+
+class ServerClientSession:
+    public Session{
+    public:
+    static const size_t default_bufsize;
+
+    virtual void run() = 0; // server/client should implement their own run()
+
+    protected:
+    // member func
+    ServerClientSession(
+        std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+        std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+        size_t b = default_bufsize
+    );
+    virtual ~ServerClientSession() = default;
+    void forwardmain(); // from mainsock to sock
+    void forwardsock(); // from sock to mainsock
+    void destroy(); // C/S destroy() can be merged
+    // member var
+    size_t buf_size;
+    std::string mainsock_readbuffer;
+    std::string sock_readbuffer;
+    std::shared_ptr<boost::asio::ip::tcp::socket> sock;
+    private:
+    
+};
+
+
+class ServerSession:
+    public ServerClientSession, private std::enable_shared_from_this<ServerSession> {
+    public:
+    ServerSession (
+        std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+        std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+        size_t b = default_bufsize
+    );
+    ~ServerSession() = default; // virtual
+    void run(); // virtual
+
+    protected:
+    void destroy();
+    private:
+};
+
+class ClientSession:
+    public ServerClientSession, private std::enable_shared_from_this<ClientSession> {
+    public:
+    ClientSession (
+        std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+        std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+        size_t b = default_bufsize
+    );
+    ~ClientSession() = default; // virtual
+    void run(); // virtual
+
+    protected:
+    void destroy();
+
+    private:
+};
+
+#endif

@@ -1,0 +1,97 @@
+#include "Session.h"
+#include <system_error>
+
+using namespace boost::asio;
+
+// Session::
+
+// enum State {
+//     created = 0, // on create, begin parsing the header
+//     connected = 1, // successfully parsed header, reach the normal state
+//     destroyed = 2 // on error, call the destroy function
+// };
+
+Session::Session(std::shared_ptr<boost::asio::ip::tcp::socket> s):
+    sessionstate(created), req(), mainsock(s) {
+};
+
+void Session::destroy() {
+    mainsock->close();
+    sessionstate = destroyed;
+}
+
+// ControlSession::
+ControlSession::ControlSession(std::shared_ptr<boost::asio::ip::tcp::socket> s):
+    Session(s) {
+};
+
+void ControlSession::run() {
+}
+
+
+// ServerClientSession::
+
+const size_t ServerClientSession::default_bufsize = 4096;
+
+ServerClientSession::ServerClientSession(
+        std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+        std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+        size_t b
+    ):Session(s1),buf_size(b),mainsock_readbuffer(0,b),sock_readbuffer(0,b),sock(s2) {
+    
+};
+
+// forwarding session, would check state first
+void ServerClientSession::forwardmain() {
+    auto ptr = shared_from_this();
+    switch (sessionstate) {
+        case connected:
+        // mainsock->async_read_some(
+        //     buffer(mainsock_readbuffer),
+        //     [this,ptr]
+        // )
+        case created:
+        case destroyed:
+        default:
+        ; // Logging
+    };
+}
+
+// forwarding session, would check state first
+void ServerClientSession::forwardsock() {
+
+}
+
+void ServerClientSession::destroy() {
+    mainsock->cancel();
+    sock->cancel();
+    mainsock->close();
+    sock->close();
+    sessionstate = destroyed;
+}
+
+
+// ServerSession::
+ServerSession::ServerSession (
+    std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+    std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+    size_t b
+):ServerClientSession(s1,s2,b) {
+};
+
+void ServerSession::run();
+
+void ServerSession::destroy();
+
+
+// ClientSession::
+
+ClientSession::ClientSession (
+    std::shared_ptr<boost::asio::ip::tcp::socket> s1,
+    std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+    size_t b
+):ServerClientSession(s1,s2,b) {};
+
+void ClientSession::run();
+
+void ClientSession::destroy();

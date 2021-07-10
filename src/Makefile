@@ -4,6 +4,8 @@ CPPFLAGS=-std=c++11 -pedantic -Wall -Wextra -Wold-style-cast -Woverloaded-virtua
 CommonDeps=ProxyProto.cpp Log.cpp Session.cpp Host.cpp
 ServerDeps=Server.cpp
 ClientDeps=Client.cpp
+all: Client Server
+
 Server: $(CommonDeps) $(ServerDeps)
 	$(CXX) $(CPPFLAGS) -oServer $(CommonDeps) $(ServerDeps)
 Client: $(CommonDeps) $(ClientDeps)

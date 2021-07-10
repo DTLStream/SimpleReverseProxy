@@ -1,4 +1,6 @@
-#include <system_error>
+#include <sys/socket.h>
+#include <sys/times.h>
+#include <signal.h>
 #include "Log.h"
 #include "Session.h"
 
@@ -15,6 +17,22 @@ Session::Session(
 ):sessionstate(connected),mainsock(s1),sock(s2),
     mainsock_pending_bytes(0),sock_pending_bytes(0),
     mainsock_readbuffer(default_bufsize,0),sock_readbuffer(default_bufsize,0) {
+    Log::setTitle("Session");
+    Log::Log<Log::info>("ignore sigpipe and setsockopt keepalive");
+    // first to ignore sigpipe
+    signal(SIGPIPE,SIG_IGN);
+    // second to set keepalive
+    bool keepalive = true;
+    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+    setsockopt(sock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+    // third to set rcv/sndtimeo
+    timeval period;
+    period.tv_sec = 5; // 5s per keepalive pkt
+    period.tv_usec = 0;
+    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
+    setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
+    setsockopt(sock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
+    setsockopt(sock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
 };
 
 Session::~Session() {

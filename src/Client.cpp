@@ -168,10 +168,24 @@ void Client::begin_connecting_target() {
 
 
 
-int main(){
+int main(int argc, char *argv[]){
     Log::setLogLevel(Log::debug);
     Log::setTitle("main");
-    Log::Log<Log::info>("in main");
-    Client c("::ffff:127.0.0.1",12345,"::ffff:127.0.0.1",12347);
+    if (argc<5) {
+        Log::Log<Log::info>(std::string(argv[0])+
+            std::string(" <session ip> <session port> <target ip> <target port>"));
+        exit(1);
+    }
+    std::string sip = argv[1], sport = argv[2], tip = argv[3], tport = argv[4];
+    if (sip.find(':')==std::string::npos) {
+        sip = std::string("::ffff:").append(sip);
+    }
+    uint16_t sport_n = std::atoi(sport.c_str());
+    if (tip.find(':')==std::string::npos) {
+        tip = std::string("::ffff:").append(tip);
+    }
+    uint16_t tport_n = std::atoi(tport.c_str());
+    Client c(sip,sport_n,tip,tport_n);
     c.run();
+    return 0;
 }

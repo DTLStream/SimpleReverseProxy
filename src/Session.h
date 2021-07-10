@@ -48,8 +48,10 @@ class Session:
 
 // Useful Utilities
 void ignore_sigpipe();
-extern size_t tcp_keepalive_time;
-extern size_t tcp_keepalive_interval;
+extern uint32_t keepalive;
+extern uint32_t tcp_keepalive_time;
+extern uint32_t tcp_keepalive_interval;
+extern uint32_t tcp_keepalive_cnt;
 void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock);
 
 #endif

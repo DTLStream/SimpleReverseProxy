@@ -154,23 +154,34 @@ void ignore_sigpipe() {
 }
 
 // TCP KEEP ALIVE UTILITIES
-size_t tcp_keepalive_time = 3; // 3s
-size_t tcp_keepalive_interval = 2; // 2s
+uint32_t keepalive = 1;
+uint32_t tcp_keepalive_time = 3; // 3s
+uint32_t tcp_keepalive_interval = 5; // 5s
+uint32_t tcp_keepalive_cnt = 5; // 5 packets before drop
 void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
     if (!sock||!sock->is_open()) return;
     Log::Log<Log::info>("TCP keep alive");
-
-    bool keepalive = 1;
-    setsockopt(sock->native_handle(),
+    int ret;
+    ret = setsockopt(sock->native_handle(),
         SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
+    if (ret) perror("SO_KEEPALIVE");
+
 #ifdef __APPLE__
 #define TCP_KEEPIDLE TCP_KEEPALIVE
-    setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPIDLE,
+    ret = setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPIDLE,
         &tcp_keepalive_time,sizeof(tcp_keepalive_time));
+    if (ret) perror("TCP_KEEPIDLE");
 #undef TCP_KEEPIDLE
 #endif
-    setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPINTVL,
+
+    ret = setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPINTVL,
         &tcp_keepalive_interval, sizeof(tcp_keepalive_interval));
+    if (ret) perror("TCP_KEEPINTVL");
+
+    ret = setsockopt(sock->native_handle(),IPPROTO_TCP,TCP_KEEPCNT,
+        &tcp_keepalive_cnt,sizeof(tcp_keepalive_cnt));
+    if (ret) perror("TCP_KEEPCNT");
+
 }
 
 

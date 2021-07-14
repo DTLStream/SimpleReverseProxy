@@ -72,6 +72,11 @@ void Session::main2sock() {
             if (!error) {
                 mainsock_pending_bytes += read_bytes_;
                 on_read_mainsock(mainsock_readbuffer.substr(0, read_bytes_));
+            } else if (error==error::eof) { // peer shutdown writing, but we may still write
+                // not going to read data from mainsock
+                Log::Log<Log::info>(error.message());
+                Log::Log<Log::debug>("eof, not reading mainsock, shutdown sock-write");
+                sock->shutdown(socket_base::shutdown_send);
             } else {
                 Log::Log<Log::warning>(error.message());
                 destroy();
@@ -91,6 +96,11 @@ void Session::sock2main() {
             if (!error) {
                 sock_pending_bytes += read_bytes_;
                 on_read_sock(sock_readbuffer.substr(0, read_bytes_));
+            } else if (error==error::eof) { // peer shutdown writing, but we may still write
+                // not going to read data from sock
+                Log::Log<Log::info>(error.message());
+                Log::Log<Log::debug>("eof, not reading sock, shutdown mainsock-write");
+                mainsock->shutdown(socket_base::shutdown_send);
             } else {
                 Log::Log<Log::warning>(error.message());
                 destroy();

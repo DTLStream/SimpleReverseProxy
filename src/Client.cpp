@@ -13,27 +13,13 @@ Client::Client(
     target_ep(ip::address::from_string(tip),tport) {
 }
 
-// deprecated methods
-
-// void Client::refresh_server_socket() {
-//     Log::setTitle("Client::refresh_server_socket");
-//     Log::Log<Log::info>("renew mainsock without connection");
-//     mainsock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
-// }
-
-// void Client::refresh_target_socket() {
-//     Log::setTitle("Client::refresh_server_socket");
-//     Log::Log<Log::info>("renew sock without connection");
-//     sock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
-// }
-
 void Client::run() {
     Log::setTitle("Client::run");
     Log::Log<Log::info>("run client");
     begin_connecting_server();
-    Log::Log<Log::info>("ioctx.run");
+    Log::Log<Log::warning>("ioctx.run");
     ioctx.run();
-    Log::Log<Log::info>("Client stopped");
+    Log::Log<Log::warning>("Client stopped");
 }
 
 void Client::destroy() {
@@ -47,11 +33,11 @@ void Client::destroy() {
         if (mainsock&&mainsock->is_open()) {
             mainsock->cancel(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
             mainsock->close(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
             mainsock.reset();
         }
@@ -59,11 +45,11 @@ void Client::destroy() {
         if (sock&&sock->is_open()) {
             sock->cancel(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
             sock->close(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
         }
         state = destroyed;
@@ -80,8 +66,8 @@ void Client::begin_connecting_server() {
         [&](const system::error_code &ec) {
             Log::setTitle("begin_connecting_server-connect");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s to retry connecting server");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s to retry connecting server");
                 begin_connecting_server();
             } else {
                 process_client_req(); // send client_connect request
@@ -101,8 +87,8 @@ void Client::process_client_req() {
         [&](const system::error_code &ec, size_t write_bytes_) {
             Log::setTitle("process_client_req-write");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry begin_connecting_server");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry begin_connecting_server");
                 begin_connecting_server();
             } else {
                 if (write_bytes_!=send_buf.size()) {
@@ -122,8 +108,8 @@ void Client::process_server_req() {
         [&](const system::error_code &ec, size_t read_bytes_) {
             Log::setTitle("process_server_req-read");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry begin_connecting_server");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry begin_connecting_server");
                 begin_connecting_server();
             } else {
                 Protocol::Request req;
@@ -144,14 +130,14 @@ void Client::process_server_req() {
 void Client::begin_connecting_target() {
     Log::setTitle("Client::begin_connecting_target");
     sock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
-    keep_alive(sock);
+    // keep_alive(sock);
     sock->async_connect(
         target_ep,
         [&](const system::error_code &ec) {
             Log::setTitle("begin_connecting_target-connect");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry begin_connecting_server");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry begin_connecting_server");
                 begin_connecting_server();
             } else {
                 Log::Log<Log::info>("create session");
@@ -161,6 +147,7 @@ void Client::begin_connecting_target() {
                 mainsock.reset();
                 sock.reset();
                 // restart connecting_server for next session
+                Log::setTitle("begin_connecting_target-connect");
                 Log::Log<Log::info>("new epoch, begin_connecting_server");
                 begin_connecting_server();
             }
@@ -173,7 +160,7 @@ int main(int argc, char *argv[]){
     Log::setLogLevel(Log::debug);
     Log::setTitle("main");
     if (argc<5) {
-        Log::Log<Log::info>(std::string(argv[0])+
+        Log::Log<Log::none>(std::string(argv[0])+
             std::string(" <session ip> <session port> <target ip> <target port>"));
         exit(1);
     }

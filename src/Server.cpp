@@ -25,38 +25,38 @@ void Server::run() {
 
     client_accpt.open(ip::tcp::v6(),error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
     client_accpt.bind(client_ep,error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
     client_accpt.listen(backlog, error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
 
     user_accpt.open(ip::tcp::v6(),error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
     user_accpt.bind(user_ep,error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
     user_accpt.listen(backlog, error);
     if (error) {
-        Log::Log<Log::info>(error.message());
+        Log::Log<Log::warning>(error.message());
         destroy();
         return;
     }
@@ -80,22 +80,22 @@ void Server::destroy() {
         if (client_accpt.is_open()) {
             client_accpt.cancel(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
             client_accpt.close(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
         }
         Log::Log<Log::info>("stop user_accpt");
         if (user_accpt.is_open()) {
             user_accpt.cancel(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
             user_accpt.close(error);
             if (error) {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
             }
         }
         // Log::Log<Log::info>("stop sockets if opened");
@@ -120,8 +120,8 @@ void Server::begin_accepting_client() {
         [&](const system::error_code &ec){
             Log::setTitle("begin_accepting_client-accept");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry Server::begin_accepting_client");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry Server::begin_accepting_client");
                 // mainsock.reset();
                 begin_accepting_client();
             } else {
@@ -139,8 +139,8 @@ void Server::process_client_req() {
         [&](const system::error_code &ec, size_t read_bytes_) {
             Log::setTitle("process_client_req-read");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry");
                 begin_accepting_client();
             } else {
                 Protocol::Request req =
@@ -176,11 +176,11 @@ void Server::begin_accepting_user() {
         [&](const system::error_code &ec){
             Log::setTitle("begin_accepting_user-accept");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry begin_accepting_user");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry begin_accepting_user");
                 begin_accepting_user();
             } else {
-                keep_alive(sock);
+                // keep_alive(sock);
                 process_server_req();
             }
         }
@@ -198,8 +198,8 @@ void Server::process_server_req() {
         [&](const system::error_code &ec, size_t write_bytes_) {
             Log::setTitle("process_server_req-write");
             if (ec) {
-                Log::Log<Log::info>(ec.message());
-                Log::Log<Log::info>("wait 0s and retry");
+                Log::Log<Log::warning>(ec.message());
+                Log::Log<Log::debug>("wait 0s and retry");
                 // mainsock.reset();
                 // sock.reset();
                 // begin_accepting_client();

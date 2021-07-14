@@ -73,7 +73,7 @@ void Session::main2sock() {
                 mainsock_pending_bytes += read_bytes_;
                 on_read_mainsock(mainsock_readbuffer.substr(0, read_bytes_));
             } else {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
                 destroy();
             }
         }
@@ -92,7 +92,7 @@ void Session::sock2main() {
                 sock_pending_bytes += read_bytes_;
                 on_read_sock(sock_readbuffer.substr(0, read_bytes_));
             } else {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
                 destroy();
             }
         }
@@ -109,14 +109,14 @@ void Session::on_read_mainsock(const std::string &towrite) {
             if (!error) {
                 mainsock_pending_bytes -= write_bytes_;
                 if (mainsock_pending_bytes==0) {
-                    Log::Log<Log::info>("completely write");
+                    Log::Log<Log::debug>("completely write");
                     main2sock();
                 } else {
-                    Log::Log<Log::info>("imcompletely write");
+                    Log::Log<Log::debug>("imcompletely write");
                     on_read_mainsock(towrite.substr(write_bytes_,mainsock_pending_bytes));
                 }
             } else {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
                 destroy();
             }
         }
@@ -133,14 +133,14 @@ void Session::on_read_sock(const std::string &towrite) {
             if (!error) {
                 sock_pending_bytes -= write_bytes_;
                 if (sock_pending_bytes==0) {
-                    Log::Log<Log::info>("completely write");
+                    Log::Log<Log::debug>("completely write");
                     sock2main();
                 } else {
-                    Log::Log<Log::info>("imcompletely write");
+                    Log::Log<Log::debug>("imcompletely write");
                     on_read_sock(towrite.substr(write_bytes_,sock_pending_bytes));
                 }
             } else {
-                Log::Log<Log::info>(error.message());
+                Log::Log<Log::warning>(error.message());
                 destroy();
             }
         }

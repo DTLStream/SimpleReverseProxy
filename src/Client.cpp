@@ -24,7 +24,7 @@ void Client::run() {
 
 void Client::destroy() {
     Log::setTitle("Client::destroy");
-    if (destroyed) {
+    if (state==destroyed) {
         Log::Log<Log::info>("already destroyed");
     } else {
         Log::Log<Log::info>("Client destroy");

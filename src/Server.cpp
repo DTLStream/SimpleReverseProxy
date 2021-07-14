@@ -71,7 +71,7 @@ void Server::run() {
 
 void Server::destroy() {
     Log::setTitle("Server::destroy");
-    if (destroyed) {
+    if (state==destroyed) {
         Log::Log<Log::info>("already destroyed");
     } else {
         Log::Log<Log::info>("Server destroy");

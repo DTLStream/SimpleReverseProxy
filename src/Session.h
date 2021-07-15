@@ -20,7 +20,8 @@ class Session:
 
     Session(
         std::shared_ptr<boost::asio::ip::tcp::socket> s1,
-        std::shared_ptr<boost::asio::ip::tcp::socket> s2
+        std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+        size_t sess_id = 0
     );
 
     // ~Session() = default;
@@ -46,6 +47,9 @@ class Session:
     // keep write buffer
     std::string sock_writebuffer; // after mainsock_readbuffer filled
     std::string mainsock_writebuffer; // after sock_readbuffer filled
+    // session_id is used for debugging
+    size_t session_id;
+    std::string session_id_disp;
 };
 
 

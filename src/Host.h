@@ -48,6 +48,7 @@ class Host {
     std::shared_ptr<boost::asio::ip::tcp::socket> mainsock; // with C/S
     std::shared_ptr<boost::asio::ip::tcp::socket> sock; // with destination(C) or source(S) 
 
+    size_t session_count;
 };
 
 #endif

@@ -147,7 +147,7 @@ void Client::begin_connecting_target() {
                 begin_connecting_server();
             } else {
                 Log::Log<Log::info>("create session");
-                auto sess = std::make_shared<Session>(mainsock,sock);
+                auto sess = std::make_shared<Session>(mainsock,sock,session_count++);
                 sess->run();
                 // give up socket ownership 
                 mainsock.reset();
@@ -163,7 +163,7 @@ void Client::begin_connecting_target() {
 
 
 int main(int argc, char *argv[]){
-    Log::setLogLevel(Log::debug);
+    Log::setLogLevel(Log::info);
     Log::setTitle("main");
     if (argc<5) {
         Log::Log<Log::none>(std::string(argv[0])+

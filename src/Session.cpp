@@ -13,15 +13,18 @@ const size_t Session::default_bufsize = 8192;
 
 Session::Session(
     std::shared_ptr<boost::asio::ip::tcp::socket> s1,
-    std::shared_ptr<boost::asio::ip::tcp::socket> s2
+    std::shared_ptr<boost::asio::ip::tcp::socket> s2,
+    size_t sess_id
 ):sessionstate(connected),mainsock(s1),sock(s2),
     mainsock_pending_bytes(0),sock_pending_bytes(0),
-    mainsock_readbuffer(default_bufsize,0),sock_readbuffer(default_bufsize,0) {
-    Log::setTitle("Session");
+    mainsock_readbuffer(default_bufsize,0),sock_readbuffer(default_bufsize,0),
+    session_id(sess_id) {
+    session_id_disp = "["+std::to_string(session_id)+"]";
+    Log::setTitle("Session"+session_id_disp);
 };
 
 Session::~Session() {
-    Log::setTitle("Session Destruction");
+    Log::setTitle("Session Destruction"+session_id_disp);
     Log::Log<Log::info>("end");
 }
 
@@ -31,7 +34,7 @@ void Session::run() {
 }
 
 void Session::destroy() {
-    Log::setTitle("Session::destroy");
+    Log::setTitle("Session::destroy"+session_id_disp);
     if (sessionstate==destroyed) {
         return;
     } else {
@@ -49,13 +52,13 @@ void Session::destroy() {
 }
 
 void Session::main2sock() {
-    Log::setTitle("Session::main2sock");
+    Log::setTitle("Session::main2sock"+session_id_disp);
     Log::Log<Log::info>("begin");
     auto ptr = shared_from_this();
     mainsock->async_read_some(
         buffer(mainsock_readbuffer),
         [this, ptr](const system::error_code &error, size_t read_bytes_) {
-            Log::setTitle("main2sock-read");
+            Log::setTitle("main2sock-read"+session_id_disp);
             if (!error) {
                 mainsock_pending_bytes += read_bytes_;
                 // update sock_writebuffer
@@ -83,13 +86,13 @@ void Session::main2sock() {
 }
 
 void Session::sock2main() {
-    Log::setTitle("Session::sock2main");
+    Log::setTitle("Session::sock2main"+session_id_disp);
     Log::Log<Log::info>("begin");
     auto ptr = shared_from_this();
     sock->async_read_some(
         buffer(sock_readbuffer),
         [this, ptr](const system::error_code &error, size_t read_bytes_) {
-            Log::setTitle("sock2main-read");
+            Log::setTitle("sock2main-read"+session_id_disp);
             if (!error) {
                 sock_pending_bytes += read_bytes_;
                 // update mainsock_writebuffer
@@ -117,12 +120,12 @@ void Session::sock2main() {
 }
 
 void Session::on_read_mainsock() {
-    Log::setTitle("Session::on_read_mainsock");
+    Log::setTitle("Session::on_read_mainsock"+session_id_disp);
     auto ptr = shared_from_this();
     sock->async_write_some(
         buffer(sock_writebuffer),
         [this, ptr](const system::error_code &error, size_t write_bytes_) {
-            Log::setTitle("on_read_mainsock-write");
+            Log::setTitle("on_read_mainsock-write"+session_id_disp);
             if (!error) {
                 mainsock_pending_bytes -= write_bytes_;
                 if (mainsock_pending_bytes==0) {
@@ -147,12 +150,12 @@ void Session::on_read_mainsock() {
 }
 
 void Session::on_read_sock() {
-    Log::setTitle("Session::on_read_sock");
+    Log::setTitle("Session::on_read_sock"+session_id_disp);
     auto ptr = shared_from_this();
     mainsock->async_write_some(
         buffer(mainsock_writebuffer),
         [this, ptr](const system::error_code &error, size_t write_bytes_) {
-            Log::setTitle("on_read_sock-write");
+            Log::setTitle("on_read_sock-write"+session_id_disp);
             if (!error) {
                 sock_pending_bytes -= write_bytes_;
                 if (sock_pending_bytes==0) {

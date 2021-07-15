@@ -206,7 +206,7 @@ void Server::process_server_req() {
                     Log::Log<Log::warning>("send_buf.size!=write_bytes, maybe error");
                 }
                 Log::Log<Log::info>("create session");
-                auto sess = std::make_shared<Session>(mainsock,sock);
+                auto sess = std::make_shared<Session>(mainsock,sock,session_count++);
                 sess->run();
             }
             mainsock.reset();
@@ -219,7 +219,7 @@ void Server::process_server_req() {
 
 
 int main(int argc, char *argv[]){
-    Log::setLogLevel(Log::debug);
+    Log::setLogLevel(Log::info);
     Log::setTitle("main");
     if (argc<5) {
         Log::Log<Log::none>(std::string(argv[0])+

@@ -75,7 +75,10 @@ void Session::main2sock() {
             Log::setTitle("main2sock-read");
             if (!error) {
                 mainsock_pending_bytes += read_bytes_;
-                on_read_mainsock(mainsock_readbuffer.substr(0, read_bytes_));
+                // update sock_writebuffer
+                sock_writebuffer = mainsock_readbuffer.substr(0, read_bytes_);
+                // method signature modified!
+                on_read_mainsock();
             } else if (error==error::eof) { // peer shutdown writing, but we may still write
                 // not going to read data from mainsock
                 Log::Log<Log::info>(error.message());
@@ -106,7 +109,10 @@ void Session::sock2main() {
             Log::setTitle("sock2main-read");
             if (!error) {
                 sock_pending_bytes += read_bytes_;
-                on_read_sock(sock_readbuffer.substr(0, read_bytes_));
+                // update mainsock_writebuffer
+                mainsock_writebuffer = sock_readbuffer.substr(0,read_bytes_);
+                // method signature modified!
+                on_read_sock();
             } else if (error==error::eof) { // peer shutdown writing, but we may still write
                 // not going to read data from sock
                 Log::Log<Log::info>(error.message());
@@ -127,12 +133,12 @@ void Session::sock2main() {
     );
 }
 
-void Session::on_read_mainsock(const std::string &towrite) {
+void Session::on_read_mainsock() {
     Log::setTitle("Session::on_read_mainsock");
     auto ptr = shared_from_this();
     sock->async_write_some(
-        buffer(towrite),
-        [this, ptr, towrite](const system::error_code &error, size_t write_bytes_) {
+        buffer(sock_writebuffer),
+        [this, ptr](const system::error_code &error, size_t write_bytes_) {
             Log::setTitle("on_read_mainsock-write");
             if (!error) {
                 mainsock_pending_bytes -= write_bytes_;
@@ -141,7 +147,13 @@ void Session::on_read_mainsock(const std::string &towrite) {
                     main2sock();
                 } else {
                     Log::Log<Log::debug>("imcompletely write");
-                    on_read_mainsock(towrite.substr(write_bytes_,mainsock_pending_bytes));
+                    // update sock_writebuffer
+                    sock_writebuffer.erase(
+                        sock_writebuffer.begin(),
+                        sock_writebuffer.begin()+write_bytes_
+                    );
+                    assert(mainsock_pending_bytes==sock_writebuffer.length());
+                    on_read_mainsock();
                 }
             } else {
                 Log::Log<Log::warning>(error.message());
@@ -151,12 +163,12 @@ void Session::on_read_mainsock(const std::string &towrite) {
     );
 }
 
-void Session::on_read_sock(const std::string &towrite) {
+void Session::on_read_sock() {
     Log::setTitle("Session::on_read_sock");
     auto ptr = shared_from_this();
     mainsock->async_write_some(
-        buffer(towrite),
-        [this, ptr, towrite](const system::error_code &error, size_t write_bytes_) {
+        buffer(mainsock_writebuffer),
+        [this, ptr](const system::error_code &error, size_t write_bytes_) {
             Log::setTitle("on_read_sock-write");
             if (!error) {
                 sock_pending_bytes -= write_bytes_;
@@ -165,7 +177,13 @@ void Session::on_read_sock(const std::string &towrite) {
                     sock2main();
                 } else {
                     Log::Log<Log::debug>("imcompletely write");
-                    on_read_sock(towrite.substr(write_bytes_,sock_pending_bytes));
+                    // update mainsock_writebuffer
+                    mainsock_writebuffer.erase(
+                        mainsock_writebuffer.begin(),
+                        mainsock_writebuffer.begin()+write_bytes_
+                    );
+                    assert(sock_pending_bytes==mainsock_writebuffer.length());
+                    on_read_sock();
                 }
             } else {
                 Log::Log<Log::warning>(error.message());

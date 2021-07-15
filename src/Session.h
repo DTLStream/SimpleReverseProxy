@@ -32,8 +32,8 @@ class Session:
     void destroy();
     void main2sock();
     void sock2main();
-    void on_read_mainsock(const std::string &towrite);
-    void on_read_sock(const std::string &towrite);
+    void on_read_mainsock();
+    void on_read_sock();
     private:
     // state to record session state
     State sessionstate;
@@ -43,6 +43,9 @@ class Session:
     size_t sock_pending_bytes;
     std::string mainsock_readbuffer;
     std::string sock_readbuffer;
+    // keep write buffer
+    std::string sock_writebuffer; // after mainsock_readbuffer filled
+    std::string mainsock_writebuffer; // after sock_readbuffer filled
 };
 
 

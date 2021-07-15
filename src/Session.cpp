@@ -53,10 +53,14 @@ void Session::destroy() {
         return;
     } else {
         Log::Log<Log::info>("destroy");
-        sock->cancel();
-        sock->close();
-        mainsock->cancel();
-        mainsock->close();
+        if (sock) {
+            sock->cancel();
+            sock.reset();
+        }
+        if (mainsock) {
+            mainsock->cancel();
+            mainsock.reset();
+        }
         sessionstate = destroyed;
     }
 }
@@ -81,7 +85,6 @@ void Session::main2sock() {
                     sock->shutdown(socket_base::shutdown_send,ec);
                     if (ec) {
                         Log::Log<Log::info>(ec.message());
-                        sock.reset();
                         destroy();
                     }
                 }
@@ -113,7 +116,6 @@ void Session::sock2main() {
                     mainsock->shutdown(socket_base::shutdown_send,ec);
                     if (ec) {
                         Log::Log<Log::info>(ec.message());
-                        mainsock.reset();
                         destroy();
                     }
                 }

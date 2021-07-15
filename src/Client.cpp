@@ -135,7 +135,7 @@ void Client::process_server_req() {
 
 void Client::begin_connecting_target() {
     Log::setTitle("Client::begin_connecting_target");
-    Log::Log<Log::warning>("begin connecting server");
+    Log::Log<Log::info>("begin connecting server");
     sock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
     // keep_alive(sock);
     sock->async_connect(

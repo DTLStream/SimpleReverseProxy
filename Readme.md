@@ -5,10 +5,13 @@
 
 
 ### Usage for Server:
-Currently not supporting parameters(options), modify IP/port Client/Server's main() to use it
+Server <ip> <port> <bind ip> <bind port>
+users should connect to <bind ip>:<bind port>
 
 ### Usage for Client:
-Currently not supporting parameters(options), modify IP/port Client/Server's main() to use it
+Client <ip> <port> <target ip> <target port>
+<target ip>:<target port> would receive connections
+
 
 ### Warning
 1. Client will keep connecting to the Server if "connection refused", a timer can be used to limit
@@ -18,8 +21,7 @@ Currently not supporting parameters(options), modify IP/port Client/Server's mai
     Server/Client's simplified implementation. Connect again and problem may be solved.
 
 ### Todo
-- [ ] Update logging level (currently the levels are the same)
+- [x] Update logging level
 - [ ] Client Timer (limit retry rates when Client/Server connection is lost)
 - [ ] Server/Client Authentication (Passwords in Protocol::Request)
 - [ ] ~~TLS(hehe)~~
-

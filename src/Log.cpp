@@ -15,5 +15,3 @@ namespace Log {
     LogObject Lobj;
     const char *timeformat = "[%b-%d-%Y %H:%M:%S] ";
 }
-
-

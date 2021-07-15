@@ -57,12 +57,12 @@ void Client::destroy() {
 
 void Client::begin_connecting_server() {
     Log::setTitle("Client::begin_connecting_server");
-    Log::Log<Log::info>("begin connecting server");
+    Log::Log<Log::warning>("begin connecting server");
     mainsock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
     // keep_alive(mainsock);
     mainsock->async_connect(
         server_ep,
-        [&](const system::error_code &ec) {
+        [this](const system::error_code &ec) {
             Log::setTitle("begin_connecting_server-connect");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -88,7 +88,7 @@ void Client::process_client_req() {
     send_buf = Protocol::Request::from_req(req);
     mainsock->async_write_some(
         buffer(send_buf),
-        [&](const system::error_code &ec, size_t write_bytes_) {
+        [this](const system::error_code &ec, size_t write_bytes_) {
             Log::setTitle("process_client_req-write");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -109,7 +109,7 @@ void Client::process_server_req() {
     Log::setTitle("Client::process_server_req");
     mainsock->async_read_some(
         buffer(receive_buf),
-        [&](const system::error_code &ec, size_t read_bytes_) {
+        [this](const system::error_code &ec, size_t read_bytes_) {
             Log::setTitle("process_server_req-read");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -135,11 +135,12 @@ void Client::process_server_req() {
 
 void Client::begin_connecting_target() {
     Log::setTitle("Client::begin_connecting_target");
+    Log::Log<Log::warning>("begin connecting server");
     sock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
     // keep_alive(sock);
     sock->async_connect(
         target_ep,
-        [&](const system::error_code &ec) {
+        [this](const system::error_code &ec) {
             Log::setTitle("begin_connecting_target-connect");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());

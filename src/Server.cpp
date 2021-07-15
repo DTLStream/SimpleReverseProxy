@@ -61,12 +61,12 @@ void Server::run() {
         return;
     }
 
-    Log::Log<Log::info>("begin accepting client");
+    // Log::Log<Log::warning>("begin accepting client");
     begin_accepting_client();
 
-    Log::Log<Log::info>("ioctx.run");
+    Log::Log<Log::warning>("ioctx.run");
     ioctx.run();
-    Log::Log<Log::info>("Server stopped");
+    Log::Log<Log::warning>("Server stopped");
 }
 
 void Server::destroy() {
@@ -106,7 +106,7 @@ void Server::destroy() {
 void Server::begin_accepting_client() {
     Log::setTitle("Server::begin_accepting_client");
     mainsock = std::make_shared<ip::tcp::socket>(ioctx);
-    Log::Log<Log::info>("begin accepting client");
+    Log::Log<Log::warning>("begin accepting client");
     // system::error_code error;
     // cannot set option on unopened socket
     // socket_base::keep_alive keepalive_option(true);
@@ -117,7 +117,7 @@ void Server::begin_accepting_client() {
     // }
     client_accpt.async_accept(
         *mainsock,
-        [&](const system::error_code &ec){
+        [this](const system::error_code &ec){
             Log::setTitle("begin_accepting_client-accept");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -136,7 +136,7 @@ void Server::process_client_req() {
     Log::setTitle("Server::process_client_req");
     mainsock->async_read_some(
         buffer(receive_buf),
-        [&](const system::error_code &ec, size_t read_bytes_) {
+        [this](const system::error_code &ec, size_t read_bytes_) {
             Log::setTitle("process_client_req-read");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -161,7 +161,7 @@ void Server::process_client_req() {
 void Server::begin_accepting_user() {
     Log::setTitle("Server::begin_accepting_user");
     sock = std::make_shared<ip::tcp::socket>(ioctx);
-    Log::Log<Log::info>("begin accepting user");
+    Log::Log<Log::warning>("begin accepting user");
     // system::error_code error;
     // cannot set option on unopened socket!
     // socket_base::keep_alive keepalive_option(true);
@@ -171,7 +171,7 @@ void Server::begin_accepting_user() {
     // }
     user_accpt.async_accept(
         *sock,
-        [&](const system::error_code &ec){
+        [this](const system::error_code &ec){
             Log::setTitle("begin_accepting_user-accept");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -193,7 +193,7 @@ void Server::process_server_req() {
     send_buf = Protocol::Request::from_req(req);
     mainsock->async_write_some(
         buffer(send_buf),
-        [&](const system::error_code &ec, size_t write_bytes_) {
+        [this](const system::error_code &ec, size_t write_bytes_) {
             Log::setTitle("process_server_req-write");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
@@ -205,7 +205,7 @@ void Server::process_server_req() {
                 if (write_bytes_!=send_buf.size()) {
                     Log::Log<Log::warning>("send_buf.size!=write_bytes, maybe error");
                 }
-                Log::Log<Log::info>("create session");
+                Log::Log<Log::warning>("create session");
                 auto sess = std::make_shared<Session>(mainsock,sock,session_count++);
                 sess->run();
             }

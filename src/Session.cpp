@@ -54,6 +54,11 @@ void Session::destroy() {
 void Session::main2sock() {
     Log::setTitle("Session::main2sock"+session_id_disp);
     Log::Log<Log::info>("begin");
+    if (!mainsock) {
+        Log::Log<Log::warning>("null mainsock");
+        destroy();
+        return;
+    }
     auto ptr = shared_from_this();
     mainsock->async_read_some(
         buffer(mainsock_readbuffer),
@@ -88,6 +93,11 @@ void Session::main2sock() {
 void Session::sock2main() {
     Log::setTitle("Session::sock2main"+session_id_disp);
     Log::Log<Log::info>("begin");
+    if (!sock) {
+        Log::Log<Log::warning>("null sock");
+        destroy();
+        return;
+    }
     auto ptr = shared_from_this();
     sock->async_read_some(
         buffer(sock_readbuffer),

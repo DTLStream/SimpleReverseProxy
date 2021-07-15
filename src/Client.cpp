@@ -14,7 +14,7 @@ Client::Client(
 
 void Client::run() {
     Log::setTitle("Client::run");
-    Log::Log<Log::info>("run client");
+    Log::Log<Log::debug>("run client");
     begin_connecting_server();
     Log::Log<Log::warning>("ioctx.run");
     ioctx.run();

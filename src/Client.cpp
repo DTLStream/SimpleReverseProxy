@@ -60,7 +60,7 @@ void Client::begin_connecting_server() {
     Log::setTitle("Client::begin_connecting_server");
     Log::Log<Log::info>("begin connecting server");
     mainsock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
-    keep_alive(mainsock);
+    // keep_alive(mainsock);
     mainsock->async_connect(
         server_ep,
         [&](const system::error_code &ec) {

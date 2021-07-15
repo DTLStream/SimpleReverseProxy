@@ -125,7 +125,7 @@ void Server::begin_accepting_client() {
                 // mainsock.reset();
                 begin_accepting_client();
             } else {
-                keep_alive(mainsock);
+                // keep_alive(mainsock);
                 process_client_req();
             }
         }

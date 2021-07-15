@@ -59,7 +59,7 @@ void Client::begin_connecting_server() {
     Log::setTitle("Client::begin_connecting_server");
     Log::Log<Log::warning>("begin connecting server");
     mainsock = std::make_shared<ip::tcp::socket>(ioctx,ip::tcp::v6());
-    // keep_alive(mainsock);
+    keep_alive(mainsock);
     mainsock->async_connect(
         server_ep,
         [this](const system::error_code &ec) {
@@ -164,7 +164,7 @@ void Client::begin_connecting_target() {
 
 
 int main(int argc, char *argv[]){
-    Log::setLogLevel(Log::info);
+    Log::setLogLevel(Log::debug);
     Log::setTitle("main");
     if (argc<5) {
         Log::Log<Log::none>(std::string(argv[0])+

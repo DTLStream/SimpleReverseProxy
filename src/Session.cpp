@@ -197,8 +197,8 @@ void ignore_sigpipe() {
 
 // TCP KEEP ALIVE UTILITIES
 uint32_t keepalive = 1;
-uint32_t tcp_keepalive_time = 10; // in seconds
-uint32_t tcp_keepalive_interval = 5;
+uint32_t tcp_keepalive_time = 30; // in seconds
+uint32_t tcp_keepalive_interval = 10;
 uint32_t tcp_keepalive_cnt = 5; // 5 packets before drop
 void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
     if (!sock||!sock->is_open()) return;

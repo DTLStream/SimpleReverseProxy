@@ -146,11 +146,11 @@ void Server::process_client_req() {
                 Protocol::Request req =
                     Protocol::Request::from_string(receive_buf.substr(0,read_bytes_));
                 if (req.get_reqtype()==Protocol::client_connect) {
-                    Log::Log<Log::info>("client_connect");
+                    Log::Log<Log::warning>("client_connect");
                     state = connected;
                     begin_accepting_user();
                 } else {
-                    Log::Log<Log::info>("client request invalid, retry begin_accepting_client");
+                    Log::Log<Log::warning>("client request invalid, retry begin_accepting_client");
                     begin_accepting_client();
                 }
             }
@@ -160,15 +160,13 @@ void Server::process_client_req() {
 
 void Server::begin_accepting_user() {
     Log::setTitle("Server::begin_accepting_user");
-    // Log::Log<Log::info>("sock = makeshared");
     sock = std::make_shared<ip::tcp::socket>(ioctx);
     Log::Log<Log::info>("begin accepting user");
     // system::error_code error;
-    // cannot set option on unopened socket
+    // cannot set option on unopened socket!
     // socket_base::keep_alive keepalive_option(true);
     // sock->set_option(keepalive_option,error);
     // if (error) {
-    //     // Log
     //     sleep(1); // Debug
     // }
     user_accpt.async_accept(
@@ -205,7 +203,7 @@ void Server::process_server_req() {
                 // begin_accepting_client();
             } else {
                 if (write_bytes_!=send_buf.size()) {
-                    Log::Log<Log::info>("send_buf.size!=write_bytes, maybe error");
+                    Log::Log<Log::warning>("send_buf.size!=write_bytes, maybe error");
                 }
                 Log::Log<Log::info>("create session");
                 auto sess = std::make_shared<Session>(mainsock,sock);
@@ -224,8 +222,9 @@ int main(int argc, char *argv[]){
     Log::setLogLevel(Log::debug);
     Log::setTitle("main");
     if (argc<5) {
-        Log::Log<Log::info>(std::string(argv[0])+
-            std::string(" <session ip> <session port> <target ip> <target port>"));
+        Log::Log<Log::none>(std::string(argv[0])+
+            std::string(" <session ip> <session port> <bind ip> <bind port>"));
+        Log::Log<Log::none>(std::string("session for Client connection, bind for users"));
         exit(1);
     }
     std::string sip = argv[1], sport = argv[2], tip = argv[3], tport = argv[4];

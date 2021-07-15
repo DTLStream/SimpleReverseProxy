@@ -4,7 +4,6 @@
 using namespace boost;
 using namespace boost::asio;
 
-
 Client::Client(
         const std::string &sip, uint16_t sport, // server
         const std::string &tip, uint16_t tport // target
@@ -67,7 +66,12 @@ void Client::begin_connecting_server() {
             Log::setTitle("begin_connecting_server-connect");
             if (ec) {
                 Log::Log<Log::warning>(ec.message());
-                Log::Log<Log::debug>("wait 0s to retry connecting server");
+                Log::Log<Log::debug>("wait 8.4s to retry connecting server");
+                /* when encounter failure in connectiong_server,
+                 * most often the server is refusing or the network is down
+                 * and thus to sleep for 500ms otherwise it will be too frequent
+                 */
+                usleep(0x800000);
                 begin_connecting_server();
             } else {
                 process_client_req(); // send client_connect request
@@ -92,7 +96,7 @@ void Client::process_client_req() {
                 begin_connecting_server();
             } else {
                 if (write_bytes_!=send_buf.size()) {
-                    Log::Log<Log::info>("send_buf.size!=write_bytes, maybe error");
+                    Log::Log<Log::warning>("send_buf.size!=write_bytes, maybe error");
                 }
                 Log::Log<Log::info>("begin process_server_req");
                 process_server_req();
@@ -115,11 +119,13 @@ void Client::process_server_req() {
                 Protocol::Request req;
                 req = Protocol::Request::from_string(receive_buf.substr(0,read_bytes_));
                 if (req.get_reqtype()==Protocol::server_connect) {
-                    Log::Log<Log::info>("server_connect, begin connecting target");
+                    Log::Log<Log::warning>("server_connect, begin connecting target");
                     state = connected;
                     begin_connecting_target();
                 } else {
-                    Log::Log<Log::info>("server request invalid, retry begin_connecting_server");
+                    Log::Log<Log::warning>(
+                        "server request invalid, retry begin_connecting_server"
+                    );
                     begin_connecting_server();
                 }
             }
@@ -162,6 +168,7 @@ int main(int argc, char *argv[]){
     if (argc<5) {
         Log::Log<Log::none>(std::string(argv[0])+
             std::string(" <session ip> <session port> <target ip> <target port>"));
+        Log::Log<Log::none>(std::string("session for Server connection, target for target"));
         exit(1);
     }
     std::string sip = argv[1], sport = argv[2], tip = argv[3], tport = argv[4];

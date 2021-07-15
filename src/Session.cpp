@@ -18,23 +18,6 @@ Session::Session(
     mainsock_pending_bytes(0),sock_pending_bytes(0),
     mainsock_readbuffer(default_bufsize,0),sock_readbuffer(default_bufsize,0) {
     Log::setTitle("Session");
-
-    // Log::Log<Log::info>("ignore sigpipe and setsockopt keepalive");
-    // // first to ignore sigpipe
-    // signal(SIGPIPE,SIG_IGN);
-    // // second to set keepalive
-    // bool keepalive = true;
-    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
-    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
-    // // third to set rcv/sndtimeo
-    // timeval period;
-    // period.tv_sec = 5; // 5s per keepalive pkt
-    // period.tv_usec = 0;
-    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
-    // setsockopt(mainsock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
-    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_RCVTIMEO,&period,sizeof(period));
-    // setsockopt(sock->native_handle(),SOL_SOCKET,SO_SNDTIMEO,&period,sizeof(period));
-
 };
 
 Session::~Session() {
@@ -143,10 +126,10 @@ void Session::on_read_mainsock() {
             if (!error) {
                 mainsock_pending_bytes -= write_bytes_;
                 if (mainsock_pending_bytes==0) {
-                    Log::Log<Log::debug>("completely write");
+                    Log::Log<Log::debug>("complete write");
                     main2sock();
                 } else {
-                    Log::Log<Log::debug>("imcompletely write");
+                    Log::Log<Log::debug>("imcomplete write");
                     // update sock_writebuffer
                     sock_writebuffer.erase(
                         sock_writebuffer.begin(),
@@ -173,10 +156,10 @@ void Session::on_read_sock() {
             if (!error) {
                 sock_pending_bytes -= write_bytes_;
                 if (sock_pending_bytes==0) {
-                    Log::Log<Log::debug>("completely write");
+                    Log::Log<Log::debug>("complete write");
                     sock2main();
                 } else {
-                    Log::Log<Log::debug>("imcompletely write");
+                    Log::Log<Log::debug>("imcomplete write");
                     // update mainsock_writebuffer
                     mainsock_writebuffer.erase(
                         mainsock_writebuffer.begin(),
@@ -201,8 +184,8 @@ void ignore_sigpipe() {
 
 // TCP KEEP ALIVE UTILITIES
 uint32_t keepalive = 1;
-uint32_t tcp_keepalive_time = 3; // 3s
-uint32_t tcp_keepalive_interval = 5; // 5s
+uint32_t tcp_keepalive_time = 10; // in seconds
+uint32_t tcp_keepalive_interval = 5;
 uint32_t tcp_keepalive_cnt = 5; // 5 packets before drop
 void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
     if (!sock||!sock->is_open()) return;
@@ -229,14 +212,3 @@ void keep_alive(std::shared_ptr<boost::asio::ip::tcp::socket> sock) {
     if (ret) perror("TCP_KEEPCNT");
 
 }
-
-
-
-// Log::Log<Log::info>("setsockopt keepalive");
-// // first to set keepalive
-// bool keepalive = 1;
-// setsockopt(mainsock->native_handle(),
-//     SOL_SOCKET,SO_KEEPALIVE,&keepalive,sizeof(keepalive));
-// // second to set IPPROTO_TCP values
-// setsockopt(mainsock->native_handle(),
-//     IPPROTO_TCP,TCP_KEEP)

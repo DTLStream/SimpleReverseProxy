@@ -143,6 +143,9 @@ void Session::on_read_mainsock() {
                     main2sock();
                 } else {
                     Log::Log<Log::debug>("imcomplete write");
+                    Log::Log<Log::debug>("bytes written: "+std::to_string(write_bytes_));
+                    Log::Log<Log::debug>("bytes pending: "+
+                        std::to_string(sock_writebuffer.size()-write_bytes_));
                     // update sock_writebuffer
                     sock_writebuffer.erase(
                         sock_writebuffer.begin(),
@@ -173,6 +176,9 @@ void Session::on_read_sock() {
                     sock2main();
                 } else {
                     Log::Log<Log::debug>("imcomplete write");
+                    Log::Log<Log::debug>("bytes written: "+std::to_string(write_bytes_));
+                    Log::Log<Log::debug>("bytes pending: "+
+                        std::to_string(mainsock_writebuffer.size()-write_bytes_));
                     // update mainsock_writebuffer
                     mainsock_writebuffer.erase(
                         mainsock_writebuffer.begin(),

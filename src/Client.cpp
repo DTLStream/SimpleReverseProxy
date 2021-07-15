@@ -120,6 +120,9 @@ void Client::process_server_req() {
                 req = Protocol::Request::from_string(receive_buf.substr(0,read_bytes_));
                 if (req.get_reqtype()==Protocol::server_connect) {
                     Log::Log<Log::warning>("server_connect, begin connecting target");
+                    if (req.get_payload().size()!=0) {
+                        Log::Log<Log::warning>("server req has payload, maybe error");
+                    }
                     state = connected;
                     begin_connecting_target();
                 } else {

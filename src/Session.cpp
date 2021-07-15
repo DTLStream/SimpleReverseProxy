@@ -76,12 +76,14 @@ void Session::main2sock() {
                 // not going to read data from mainsock
                 Log::Log<Log::info>(error.message());
                 Log::Log<Log::debug>("eof, not reading mainsock, shutdown sock-write");
-                if (sock&&sock->is_open()) try {
-                    sock->shutdown(socket_base::shutdown_send);
-                } catch (system::error_code &ec) {
-                    Log::Log<Log::info>(ec.message());
-                    sock.reset();
-                    destroy();
+                system::error_code ec;
+                if (sock&&sock->is_open()) {
+                    sock->shutdown(socket_base::shutdown_send,ec);
+                    if (ec) {
+                        Log::Log<Log::info>(ec.message());
+                        sock.reset();
+                        destroy();
+                    }
                 }
             } else {
                 Log::Log<Log::warning>(error.message());
@@ -106,12 +108,14 @@ void Session::sock2main() {
                 // not going to read data from sock
                 Log::Log<Log::info>(error.message());
                 Log::Log<Log::debug>("eof, not reading sock, shutdown mainsock-write");
-                if (sock&&sock->is_open()) try {
-                    mainsock->shutdown(socket_base::shutdown_send);
-                } catch (system::error_code &ec) {
-                    Log::Log<Log::info>(ec.message());
-                    mainsock.reset();
-                    destroy();
+                system::error_code ec;
+                if (mainsock&&mainsock->is_open()) {
+                    mainsock->shutdown(socket_base::shutdown_send,ec);
+                    if (ec) {
+                        Log::Log<Log::info>(ec.message());
+                        mainsock.reset();
+                        destroy();
+                    }
                 }
             } else {
                 Log::Log<Log::warning>(error.message());
